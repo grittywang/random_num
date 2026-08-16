@@ -1,385 +1,591 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>随机数生成器</title>
-<link rel="stylesheet" href="icons/materialdesignicons.min.css">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:'PingFang SC','Microsoft YaHei','Helvetica Neue',Arial,sans-serif;
-  min-height:100vh;
-  background:linear-gradient(150deg,#e8f4fd 0%,#d0eaf8 35%,#f5e6f0 65%,#fdf0e6 100%);
-  display:flex;align-items:center;justify-content:center;
-  padding:24px 16px;overflow-x:hidden;
-}
-#bgCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.35}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>随机数生成器</title>
+  <link rel="stylesheet" href="icons/materialdesignicons.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
 
-.card{
-  position:relative;z-index:1;width:100%;max-width:580px;
-  background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
-  border-radius:28px;
-  box-shadow:0 16px 48px rgba(74,144,217,.13),0 2px 12px rgba(0,0,0,.06);
-  padding:40px 32px 32px;
-}
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(150deg, #e8f4fd 0%, #d0eaf8 35%, #f5e6f0 65%, #fdf0e6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow-x: hidden;
+    }
 
-/* header */
-.header{text-align:center;margin-bottom:28px}
-.header .icon-wrap{display:inline-block;margin-bottom:8px}
-.header .icon-wrap i{
-  font-size:52px;color:#4A90D9;display:inline-block;
-  transition:transform .4s cubic-bezier(.34,1.56,.64,1);
-}
-.header .icon-wrap.spin i{transform:rotate(360deg) scale(1.15)}
-.header h1{font-size:26px;font-weight:700;color:#333;letter-spacing:.5px}
-.header h1 span{
-  background:linear-gradient(135deg,#4A90D9,#7EC8A0);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
+    #bgCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: .35
+    }
 
-/* control */
-.control{display:flex;align-items:center;gap:14px;margin-bottom:28px;flex-wrap:wrap}
-.control label{font-size:15px;font-weight:600;color:#555;white-space:nowrap}
-.digit-val{min-width:36px;text-align:center;font-size:20px;font-weight:700;color:#4A90D9}
-input[type=range]{
-  -webkit-appearance:none;appearance:none;flex:1;min-width:120px;height:6px;
-  background:linear-gradient(90deg,#b8d8f8,#7EC8A0);border-radius:3px;outline:none;cursor:pointer;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
-  background:#fff;border:3px solid #4A90D9;
-  box-shadow:0 2px 8px rgba(74,144,217,.25);cursor:pointer;
-}
-input[type=range]::-moz-range-thumb{
-  width:22px;height:22px;border-radius:50%;
-  background:#fff;border:3px solid #4A90D9;
-  box-shadow:0 2px 8px rgba(74,144,217,.25);cursor:pointer;
-}
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 580px;
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(10px);
+      border-radius: 28px;
+      box-shadow: 0 16px 48px rgba(74, 144, 217, .13), 0 2px 12px rgba(0, 0, 0, .06);
+      padding: 40px 32px 32px;
+    }
 
-/* result area */
-.result-area{
-  background:linear-gradient(135deg,#f0f7ff,#f5fffa);
-  border-radius:20px;padding:24px 16px;margin-bottom:28px;
-  border:2px dashed #d0e5f5;
-  transition:border-color .3s,background .3s;
-}
-.result-area.active{border-color:#4A90D9;background:linear-gradient(135deg,#e8f4fd,#eafff5)}
-.result-label{text-align:center;font-size:12px;color:#aaa;margin-bottom:14px;letter-spacing:1px;font-weight:500}
+    /* header */
+    .header {
+      text-align: center;
+      margin-bottom: 28px
+    }
 
-/* digits — single row, scrollable on small screens */
-.digits{
-  display:flex;justify-content:center;flex-wrap:nowrap;
-  gap:4px;overflow-x:auto;padding:4px 0;
-  -webkit-overflow-scrolling:touch;
-}
-.digits::-webkit-scrollbar{height:4px}
-.digits::-webkit-scrollbar-thumb{background:#d0e5f5;border-radius:2px}
+    .header .icon-wrap {
+      display: inline-block;
+      margin-bottom: 8px
+    }
 
-.digit-slot{
-  min-width:36px;width:36px;height:52px;flex-shrink:0;
-  overflow:hidden;position:relative;
-  background:#fff;border-radius:10px;
-  box-shadow:inset 0 2px 6px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
-  border:1.5px solid #e8eef5;
-  transition:border-color .3s,box-shadow .3s;
-}
-.digit-slot .digit-display{
-  width:100%;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:26px;font-weight:700;color:#4A90D9;
-  font-variant-numeric:tabular-nums;user-select:none;
-}
-.digit-slot.rolling{
-  border-color:#FF8A65;
-  box-shadow:0 0 0 3px rgba(255,138,101,.2),inset 0 2px 6px rgba(0,0,0,.06);
-}
-.digit-slot.done{
-  border-color:#7EC8A0;
-  box-shadow:0 0 0 3px rgba(126,200,160,.2),inset 0 2px 6px rgba(0,0,0,.06);
-}
-.digit-slot.done .digit-display{color:#333}
+    .header .icon-wrap i {
+      font-size: 52px;
+      color: #4A90D9;
+      display: inline-block;
+      transition: transform .4s cubic-bezier(.34, 1.56, .64, 1);
+    }
 
-/* buttons */
-.btn-group{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
-.btn{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:14px 32px;border-radius:14px;border:none;
-  font-size:16px;font-weight:600;cursor:pointer;
-  transition:all .25s cubic-bezier(.34,1.56,.64,1);font-family:inherit;
-}
-.btn i{font-size:18px}
-.btn-primary{
-  background:linear-gradient(135deg,#4A90D9,#5BA3E8);color:#fff;
-  box-shadow:0 4px 16px rgba(74,144,217,.3);
-}
-.btn-primary:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 8px 28px rgba(74,144,217,.38)}
-.btn-primary:active{transform:translateY(0) scale(.97)}
-.btn-secondary{
-  background:linear-gradient(135deg,#7EC8A0,#5CB88A);color:#fff;
-  box-shadow:0 4px 16px rgba(126,200,160,.3);
-}
-.btn-secondary:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 8px 28px rgba(126,200,160,.38)}
-.btn-secondary:active{transform:translateY(0) scale(.97)}
+    .header .icon-wrap.spin i {
+      transform: rotate(360deg) scale(1.15)
+    }
 
-/* toast */
-.toast{
-  position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(20px);
-  background:#333;color:#fff;padding:12px 28px;border-radius:12px;
-  font-size:14px;font-weight:500;opacity:0;
-  transition:all .35s cubic-bezier(.34,1.56,.64,1);
-  pointer-events:none;z-index:100;white-space:nowrap;
-  box-shadow:0 6px 20px rgba(0,0,0,.18);
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #333;
+      letter-spacing: .5px
+    }
 
-/* footer */
-.footer{text-align:center;padding-top:8px}
-.footer p{font-size:13px;color:#bbb;line-height:1.7}
-.footer .hint{color:#999}
+    .header h1 span {
+      background: linear-gradient(135deg, #4A90D9, #7EC8A0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-/* responsive */
-@media(max-width:500px){
-  .card{padding:28px 16px 22px;border-radius:22px}
-  .header h1{font-size:22px}
-  .header .icon-wrap i{font-size:42px}
-  .btn{padding:12px 22px;font-size:14px;border-radius:12px}
-  .digits{gap:3px}
-  .digit-slot{min-width:28px;width:28px;height:42px}
-  .digit-slot .digit-display{font-size:20px}
-}
-</style>
+    /* control */
+    .control {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      flex-wrap: wrap
+    }
+
+    .control label {
+      font-size: 15px;
+      font-weight: 600;
+      color: #555;
+      white-space: nowrap
+    }
+
+    .digit-val {
+      min-width: 36px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #4A90D9
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      min-width: 120px;
+      height: 6px;
+      background: linear-gradient(90deg, #b8d8f8, #7EC8A0);
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #4A90D9;
+      box-shadow: 0 2px 8px rgba(74, 144, 217, .25);
+      cursor: pointer;
+    }
+
+    input[type=range]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #4A90D9;
+      box-shadow: 0 2px 8px rgba(74, 144, 217, .25);
+      cursor: pointer;
+    }
+
+    /* result area */
+    .result-area {
+      background: linear-gradient(135deg, #f0f7ff, #f5fffa);
+      border-radius: 20px;
+      padding: 24px 16px;
+      margin-bottom: 28px;
+      border: 2px dashed #d0e5f5;
+      transition: border-color .3s, background .3s;
+    }
+
+    .result-area.active {
+      border-color: #4A90D9;
+      background: linear-gradient(135deg, #e8f4fd, #eafff5)
+    }
+
+    .result-label {
+      text-align: center;
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 14px;
+      letter-spacing: 1px;
+      font-weight: 500
+    }
+
+    /* digits — single row, scrollable on small screens */
+    .digits {
+      display: flex;
+      justify-content: center;
+      flex-wrap: nowrap;
+      gap: 4px;
+      overflow-x: auto;
+      padding: 4px 0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .digits::-webkit-scrollbar {
+      height: 4px
+    }
+
+    .digits::-webkit-scrollbar-thumb {
+      background: #d0e5f5;
+      border-radius: 2px
+    }
+
+    .digit-slot {
+      min-width: 36px;
+      width: 36px;
+      height: 52px;
+      flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, .06), 0 2px 8px rgba(0, 0, 0, .04);
+      border: 1.5px solid #e8eef5;
+      transition: border-color .3s, box-shadow .3s;
+    }
+
+    .digit-slot .digit-display {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 700;
+      color: #4A90D9;
+      font-variant-numeric: tabular-nums;
+      user-select: none;
+    }
+
+    .digit-slot.rolling {
+      border-color: #FF8A65;
+      box-shadow: 0 0 0 3px rgba(255, 138, 101, .2), inset 0 2px 6px rgba(0, 0, 0, .06);
+    }
+
+    .digit-slot.done {
+      border-color: #7EC8A0;
+      box-shadow: 0 0 0 3px rgba(126, 200, 160, .2), inset 0 2px 6px rgba(0, 0, 0, .06);
+    }
+
+    .digit-slot.done .digit-display {
+      color: #333
+    }
+
+    /* buttons */
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: 14px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .25s cubic-bezier(.34, 1.56, .64, 1);
+      font-family: inherit;
+    }
+
+    .btn i {
+      font-size: 18px
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4A90D9, #5BA3E8);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(74, 144, 217, .3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 8px 28px rgba(74, 144, 217, .38)
+    }
+
+    .btn-primary:active {
+      transform: translateY(0) scale(.97)
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #7EC8A0, #5CB88A);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(126, 200, 160, .3);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 8px 28px rgba(126, 200, 160, .38)
+    }
+
+    .btn-secondary:active {
+      transform: translateY(0) scale(.97)
+    }
+
+    /* toast */
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #333;
+      color: #fff;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all .35s cubic-bezier(.34, 1.56, .64, 1);
+      pointer-events: none;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0)
+    }
+
+    /* footer */
+    .footer {
+      text-align: center;
+      padding-top: 8px
+    }
+
+    .footer p {
+      font-size: 13px;
+      color: #bbb;
+      line-height: 1.7
+    }
+
+    .footer .hint {
+      color: #999
+    }
+
+    /* responsive */
+    @media(max-width:500px) {
+      .card {
+        padding: 28px 16px 22px;
+        border-radius: 22px
+      }
+
+      .header h1 {
+        font-size: 22px
+      }
+
+      .header .icon-wrap i {
+        font-size: 42px
+      }
+
+      .btn {
+        padding: 12px 22px;
+        font-size: 14px;
+        border-radius: 12px
+      }
+
+      .digits {
+        gap: 3px
+      }
+
+      .digit-slot {
+        min-width: 28px;
+        width: 28px;
+        height: 42px
+      }
+
+      .digit-slot .digit-display {
+        font-size: 20px
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<canvas id="bgCanvas"></canvas>
+  <canvas id="bgCanvas"></canvas>
 
-<div class="card">
-  <div class="header">
-    <div class="icon-wrap" id="headerIcon">
-      <i class="mdi mdi-dice-multiple"></i>
+  <div class="card">
+    <div class="header">
+      <div class="icon-wrap" id="headerIcon">
+        <i class="mdi mdi-dice-multiple"></i>
+      </div>
+      <h1><span>随机数生成器</span></h1>
     </div>
-    <h1><span>随机数生成器</span></h1>
+
+    <div class="control">
+      <label for="digitCount">位数</label>
+      <input type="range" id="digitCount" min="1" max="20" value="10">
+      <span class="digit-val" id="digitVal">10</span>
+    </div>
+
+    <div class="result-area" id="resultArea">
+      <div class="result-label">点 击 生 成 获 取 随 机 数</div>
+      <div class="digits" id="digits"></div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" id="generateBtn">
+        <i class="mdi mdi-dice-multiple"></i>生成
+      </button>
+      <button class="btn btn-secondary" id="copyBtn">
+        <i class="mdi mdi-content-copy"></i>复制
+      </button>
+    </div>
   </div>
 
-  <div class="control">
-    <label for="digitCount">位数</label>
-    <input type="range" id="digitCount" min="1" max="20" value="10">
-    <span class="digit-val" id="digitVal">10</span>
-  </div>
+  <div class="toast" id="toast">复制成功!</div>
 
-  <div class="result-area" id="resultArea">
-    <div class="result-label">点 击 生 成 获 取 随 机 数</div>
-    <div class="digits" id="digits"></div>
-  </div>
+  <script>
+    /* ============ Config ============ */
+    const ROLL_STEPS = 55;       // number of random swaps per digit
+    const BASE_MS = 30;       // initial interval (ms)
+    const POWER = 2.2;      // deceleration exponent (>1 = faster slowdown)
+    const SLOT_W = 36;       // digit-slot width (px, desktop)
 
-  <div class="btn-group">
-    <button class="btn btn-primary" id="generateBtn">
-      <i class="mdi mdi-dice-multiple"></i>生成
-    </button>
-    <button class="btn btn-secondary" id="copyBtn">
-      <i class="mdi mdi-content-copy"></i>复制
-    </button>
-  </div>
+    /* ============ State ============ */
+    let digitCount = 10;
+    let isAnimating = false;
+    let currentResult = '';
 
-  <div class="footer">
-    <p class="hint">每个数字都在独立跳动哦~</p>
-  </div>
-</div>
+    /* ============ DOM ============ */
+    const $digits = document.getElementById('digits');
+    const $range = document.getElementById('digitCount');
+    const $val = document.getElementById('digitVal');
+    const $generate = document.getElementById('generateBtn');
+    const $copy = document.getElementById('copyBtn');
+    const $toast = document.getElementById('toast');
+    const $resultArea = document.getElementById('resultArea');
+    const $headerIcon = document.getElementById('headerIcon');
 
-<div class="toast" id="toast">复制成功!</div>
+    /* ============ Helpers ============ */
+    function rand() { return Math.floor(Math.random() * 10); }
 
-<script>
-/* ============ Config ============ */
-const ROLL_STEPS = 55;       // number of random swaps per digit
-const BASE_MS    = 30;       // initial interval (ms)
-const POWER      = 2.2;      // deceleration exponent (>1 = faster slowdown)
-const SLOT_W     = 36;       // digit-slot width (px, desktop)
-
-/* ============ State ============ */
-let digitCount   = 10;
-let isAnimating  = false;
-let currentResult= '';
-
-/* ============ DOM ============ */
-const $digits     = document.getElementById('digits');
-const $range      = document.getElementById('digitCount');
-const $val        = document.getElementById('digitVal');
-const $generate   = document.getElementById('generateBtn');
-const $copy       = document.getElementById('copyBtn');
-const $toast      = document.getElementById('toast');
-const $resultArea = document.getElementById('resultArea');
-const $headerIcon = document.getElementById('headerIcon');
-
-/* ============ Helpers ============ */
-function rand(){ return Math.floor(Math.random()*10); }
-
-/* Create a digit slot with initial display "0" */
-function createSlot(){
-  const slot = document.createElement('div');
-  slot.className = 'digit-slot';
-  slot.innerHTML = '<div class="digit-display">0</div>';
-  return slot;
-}
-
-/* Build all slots, show "0" in each */
-function buildSlots(){
-  $digits.innerHTML = '';
-  for(let i = 0; i < digitCount; i++){
-    $digits.appendChild(createSlot());
-  }
-}
-
-/* ============ Sequential Slot-Machine Animation ============ */
-function animateSlot(slot, target){
-  return new Promise(resolve => {
-    const display = slot.querySelector('.digit-display');
-    let step = 0;
-    slot.classList.add('rolling');
-
-    function tick(){
-      if(step >= ROLL_STEPS){
-        /* ---- settle on final digit ---- */
-        display.textContent = target;
-        slot.classList.remove('rolling');
-        slot.classList.add('done');
-        resolve();
-        return;
-      }
-      /* show a random digit while rolling */
-      display.textContent = rand();
-      step++;
-      /* ease-out: short intervals first, longer as we slow down */
-      const delay = BASE_MS * Math.pow(step / ROLL_STEPS, POWER);
-      setTimeout(tick, delay);
+    /* Create a digit slot with initial display "0" */
+    function createSlot() {
+      const slot = document.createElement('div');
+      slot.className = 'digit-slot';
+      slot.innerHTML = '<div class="digit-display">0</div>';
+      return slot;
     }
-    tick();
-  });
-}
 
-/* ============ Generate ============ */
-async function generate(){
-  if(isAnimating) return;
-  isAnimating = true;
-  $generate.style.opacity = '.55';
-  $generate.style.pointerEvents = 'none';
+    /* Build all slots, show "0" in each */
+    function buildSlots() {
+      $digits.innerHTML = '';
+      for (let i = 0; i < digitCount; i++) {
+        $digits.appendChild(createSlot());
+      }
+    }
 
-  /* spin header icon */
-  $headerIcon.classList.remove('spin');
-  void $headerIcon.offsetWidth;
-  $headerIcon.classList.add('spin');
+    /* ============ Sequential Slot-Machine Animation ============ */
+    function animateSlot(slot, target) {
+      return new Promise(resolve => {
+        const display = slot.querySelector('.digit-display');
+        let step = 0;
+        slot.classList.add('rolling');
 
-  $resultArea.classList.add('active');
+        function tick() {
+          if (step >= ROLL_STEPS) {
+            /* ---- settle on final digit ---- */
+            display.textContent = target;
+            slot.classList.remove('rolling');
+            slot.classList.add('done');
+            resolve();
+            return;
+          }
+          /* show a random digit while rolling */
+          display.textContent = rand();
+          step++;
+          /* ease-out: short intervals first, longer as we slow down */
+          const delay = BASE_MS * Math.pow(step / ROLL_STEPS, POWER);
+          setTimeout(tick, delay);
+        }
+        tick();
+      });
+    }
 
-  /* generate result */
-  const res = Array.from({length: digitCount}, rand);
-  currentResult = res.join('');
+    /* ============ Generate ============ */
+    async function generate() {
+      if (isAnimating) return;
+      isAnimating = true;
+      $generate.style.opacity = '.55';
+      $generate.style.pointerEvents = 'none';
 
-  /* build fresh slots showing "0" */
-  buildSlots();
+      /* spin header icon */
+      $headerIcon.classList.remove('spin');
+      void $headerIcon.offsetWidth;
+      $headerIcon.classList.add('spin');
 
-  /* animate each digit sequentially: left to right */
-  const slots = $digits.querySelectorAll('.digit-slot');
-  for(let i = 0; i < slots.length; i++){
-    await animateSlot(slots[i], res[i]);
-  }
+      $resultArea.classList.add('active');
 
-  /* unlock */
-  isAnimating = false;
-  $generate.style.opacity = '1';
-  $generate.style.pointerEvents = 'auto';
-}
+      /* generate result */
+      const res = Array.from({ length: digitCount }, rand);
+      currentResult = res.join('');
 
-/* ============ Copy ============ */
-function copyResult(){
-  if(!currentResult){ showToast('请先生成随机数~'); return; }
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(currentResult).then(()=>showToast('复制成功!'));
-  } else {
-    const t = document.createElement('textarea');
-    t.value = currentResult; t.style.cssText='position:fixed;left:-9999px';
-    document.body.appendChild(t); t.select();
-    document.execCommand('copy'); t.remove();
-    showToast('复制成功!');
-  }
-}
+      /* build fresh slots showing "0" */
+      buildSlots();
 
-let toastTimer;
-function showToast(msg){
-  clearTimeout(toastTimer);
-  $toast.textContent = msg;
-  $toast.classList.add('show');
-  toastTimer = setTimeout(() => $toast.classList.remove('show'), 2200);
-}
+      /* animate each digit sequentially: left to right */
+      const slots = $digits.querySelectorAll('.digit-slot');
+      for (let i = 0; i < slots.length; i++) {
+        await animateSlot(slots[i], res[i]);
+      }
 
-/* ============ Slider ============ */
-$range.addEventListener('input', () => {
-  digitCount = +$range.value;
-  $val.textContent = digitCount;
-  currentResult = '';
-  $resultArea.classList.remove('active');
-  buildSlots();
-});
+      /* unlock */
+      isAnimating = false;
+      $generate.style.opacity = '1';
+      $generate.style.pointerEvents = 'auto';
+    }
 
-/* ============ Canvas Background ============ */
-(function initBg(){
-  const c = document.getElementById('bgCanvas');
-  const ctx = c.getContext('2d');
-  let W, H;
-  function resize(){ W = c.width = innerWidth; H = c.height = innerHeight; }
-  resize(); addEventListener('resize', resize);
+    /* ============ Copy ============ */
+    function copyResult() {
+      if (!currentResult) { showToast('请先生成随机数~'); return; }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(currentResult).then(() => showToast('复制成功!'));
+      } else {
+        const t = document.createElement('textarea');
+        t.value = currentResult; t.style.cssText = 'position:fixed;left:-9999px';
+        document.body.appendChild(t); t.select();
+        document.execCommand('copy'); t.remove();
+        showToast('复制成功!');
+      }
+    }
 
-  const TYPES = ['circle','star','plane','book','dot'];
-  const COLORS = ['#4A90D9','#7EC8A0','#FF8A65','#B8A9E8','#FFD54F'];
-  const shapes = [];
-  for(let i = 0; i < 18; i++){
-    shapes.push({
-      x: Math.random()*2000, y: Math.random()*2000,
-      r: 4+Math.random()*18, type: TYPES[i%TYPES.length],
-      color: COLORS[i%COLORS.length], opacity: .12+Math.random()*.18,
-      vx: (Math.random()-.5)*.25, vy: -.12-Math.random()*.35,
-      phase: Math.random()*Math.PI*2
+    let toastTimer;
+    function showToast(msg) {
+      clearTimeout(toastTimer);
+      $toast.textContent = msg;
+      $toast.classList.add('show');
+      toastTimer = setTimeout(() => $toast.classList.remove('show'), 2200);
+    }
+
+    /* ============ Slider ============ */
+    $range.addEventListener('input', () => {
+      digitCount = +$range.value;
+      $val.textContent = digitCount;
+      currentResult = '';
+      $resultArea.classList.remove('active');
+      buildSlots();
     });
-  }
-  function drawCircle(s){ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.color;ctx.globalAlpha=s.opacity;ctx.fill();}
-  function drawStar(s){
-    ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.phase+performance.now()*.0003);
-    const r=s.r,ri=r*.45,pts=5;ctx.beginPath();
-    for(let i=0;i<pts*2;i++){const rad=i%2===0?r:ri;const a=(i*Math.PI/pts)-Math.PI/2;i===0?ctx.moveTo(Math.cos(a)*rad,Math.sin(a)*rad):ctx.lineTo(Math.cos(a)*rad,Math.sin(a)*rad);}
-    ctx.closePath();ctx.fillStyle=s.color;ctx.globalAlpha=s.opacity;ctx.fill();ctx.restore();
-  }
-  function drawPlane(s){
-    ctx.save();ctx.translate(s.x,s.y);ctx.rotate(-.3+Math.sin(s.phase+performance.now()*.001)*.15);
-    const r=s.r*.8;ctx.beginPath();ctx.moveTo(-r,r*.3);ctx.lineTo(r,0);ctx.lineTo(-r,-r*.3);ctx.closePath();
-    ctx.fillStyle=s.color;ctx.globalAlpha=s.opacity;ctx.fill();
-    ctx.beginPath();ctx.moveTo(-r,r*.3);ctx.lineTo(-r*1.6,r*.7);ctx.moveTo(-r,-r*.3);ctx.lineTo(-r*1.6,-r*.7);
-    ctx.strokeStyle=s.color;ctx.lineWidth=1.5;ctx.globalAlpha=s.opacity*.5;ctx.stroke();ctx.restore();
-  }
-  function drawBook(s){
-    ctx.save();ctx.translate(s.x,s.y);const w=s.r*1.4,h=s.r*1.1;
-    ctx.fillStyle=s.color;ctx.globalAlpha=s.opacity;ctx.fillRect(-w/2,-h/2,w,h);
-    ctx.fillStyle='#fff';ctx.globalAlpha=s.opacity*.6;
-    ctx.fillRect(-w/2+2,-h/2+2,w-4,2);ctx.fillRect(-w/2+2,-h/2+h*.35,w-4,1.5);ctx.fillRect(-w/2+2,-h/2+h*.55,w*.5,1.5);
-    ctx.restore();
-  }
-  const drawFns={circle:drawCircle,star:drawStar,plane:drawPlane,book:drawBook,dot:drawCircle};
-  function loop(){
-    ctx.clearRect(0,0,W,H);const t=performance.now()*.001;
-    shapes.forEach(s=>{
-      s.x+=s.vx+Math.sin(t+s.phase)*.18;s.y+=s.vy;
-      if(s.y<-40){s.y=H+40;s.x=Math.random()*W;}
-      if(s.x<-40)s.x=W+40;if(s.x>W+40)s.x=-40;
-      (drawFns[s.type]||drawCircle)(s);
-    });
-    ctx.globalAlpha=1;requestAnimationFrame(loop);
-  }
-  loop();
-})();
 
-/* ============ Init ============ */
-$generate.addEventListener('click', generate);
-$copy.addEventListener('click', copyResult);
-buildSlots();
-</script>
+    /* ============ Canvas Background ============ */
+    (function initBg() {
+      const c = document.getElementById('bgCanvas');
+      const ctx = c.getContext('2d');
+      let W, H;
+      function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+      resize(); addEventListener('resize', resize);
+
+      const TYPES = ['circle', 'star', 'plane', 'book', 'dot'];
+      const COLORS = ['#4A90D9', '#7EC8A0', '#FF8A65', '#B8A9E8', '#FFD54F'];
+      const shapes = [];
+      for (let i = 0; i < 18; i++) {
+        shapes.push({
+          x: Math.random() * 2000, y: Math.random() * 2000,
+          r: 4 + Math.random() * 18, type: TYPES[i % TYPES.length],
+          color: COLORS[i % COLORS.length], opacity: .12 + Math.random() * .18,
+          vx: (Math.random() - .5) * .25, vy: -.12 - Math.random() * .35,
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+      function drawCircle(s) { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fillStyle = s.color; ctx.globalAlpha = s.opacity; ctx.fill(); }
+      function drawStar(s) {
+        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.phase + performance.now() * .0003);
+        const r = s.r, ri = r * .45, pts = 5; ctx.beginPath();
+        for (let i = 0; i < pts * 2; i++) { const rad = i % 2 === 0 ? r : ri; const a = (i * Math.PI / pts) - Math.PI / 2; i === 0 ? ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad) : ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad); }
+        ctx.closePath(); ctx.fillStyle = s.color; ctx.globalAlpha = s.opacity; ctx.fill(); ctx.restore();
+      }
+      function drawPlane(s) {
+        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(-.3 + Math.sin(s.phase + performance.now() * .001) * .15);
+        const r = s.r * .8; ctx.beginPath(); ctx.moveTo(-r, r * .3); ctx.lineTo(r, 0); ctx.lineTo(-r, -r * .3); ctx.closePath();
+        ctx.fillStyle = s.color; ctx.globalAlpha = s.opacity; ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-r, r * .3); ctx.lineTo(-r * 1.6, r * .7); ctx.moveTo(-r, -r * .3); ctx.lineTo(-r * 1.6, -r * .7);
+        ctx.strokeStyle = s.color; ctx.lineWidth = 1.5; ctx.globalAlpha = s.opacity * .5; ctx.stroke(); ctx.restore();
+      }
+      function drawBook(s) {
+        ctx.save(); ctx.translate(s.x, s.y); const w = s.r * 1.4, h = s.r * 1.1;
+        ctx.fillStyle = s.color; ctx.globalAlpha = s.opacity; ctx.fillRect(-w / 2, -h / 2, w, h);
+        ctx.fillStyle = '#fff'; ctx.globalAlpha = s.opacity * .6;
+        ctx.fillRect(-w / 2 + 2, -h / 2 + 2, w - 4, 2); ctx.fillRect(-w / 2 + 2, -h / 2 + h * .35, w - 4, 1.5); ctx.fillRect(-w / 2 + 2, -h / 2 + h * .55, w * .5, 1.5);
+        ctx.restore();
+      }
+      const drawFns = { circle: drawCircle, star: drawStar, plane: drawPlane, book: drawBook, dot: drawCircle };
+      function loop() {
+        ctx.clearRect(0, 0, W, H); const t = performance.now() * .001;
+        shapes.forEach(s => {
+          s.x += s.vx + Math.sin(t + s.phase) * .18; s.y += s.vy;
+          if (s.y < -40) { s.y = H + 40; s.x = Math.random() * W; }
+          if (s.x < -40) s.x = W + 40; if (s.x > W + 40) s.x = -40;
+          (drawFns[s.type] || drawCircle)(s);
+        });
+        ctx.globalAlpha = 1; requestAnimationFrame(loop);
+      }
+      loop();
+    })();
+
+    /* ============ Init ============ */
+    $generate.addEventListener('click', generate);
+    $copy.addEventListener('click', copyResult);
+    buildSlots();
+  </script>
 </body>
+
 </html>
