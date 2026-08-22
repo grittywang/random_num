@@ -3,27 +3,70 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>随机数生成器</title>
   <link rel="stylesheet" href="icons/materialdesignicons.min.css">
   <style>
+    /* ========================================
+   TOKENS — 笔记本调色盘
+   ======================================== */
+    :root {
+      --paper: #FBF8F1;
+      --ink: #2B5EA7;
+      --pencil: #4A4A4A;
+      --grid: #C8E0F4;
+      --highlight: #FFE066;
+      --eraser: #FFB5B5;
+      --ruler: #5B9A4F;
+      --redpen: #D94F4F;
+    }
+
+    /* 深色模式变量 */
+    .dark {
+      --paper: #1a1d23;
+      --ink: #7EB8E6;
+      --pencil: #c8ccd4;
+      --grid: #2a2e36;
+      --highlight: #5a4e2a;
+      --eraser: #5a3a3a;
+      --ruler: #3a5a35;
+      --redpen: #8a4444;
+    }
+
+    /* ========================================
+   RESET & BASE
+   ======================================== */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box
     }
 
+    html {
+      -webkit-tap-highlight-color: transparent
+    }
+
     body {
-      font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+      font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
       min-height: 100vh;
-      background: linear-gradient(150deg, #e8f4fd 0%, #d0eaf8 35%, #f5e6f0 65%, #fdf0e6 100%);
+      background-color: var(--paper);
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px;
+      flex-direction: column;
+      color: var(--pencil);
       overflow-x: hidden;
     }
 
+    .page-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 12px;
+    }
+
+    /* ========================================
+   CANVAS — 浮动文具背景
+   ======================================== */
     #bgCanvas {
       position: fixed;
       inset: 0;
@@ -31,163 +74,224 @@
       height: 100%;
       pointer-events: none;
       z-index: 0;
-      opacity: .35
+      opacity: .7;
     }
 
-    .card {
+    /* ========================================
+   NOTEBOOK — 主卡片
+   ======================================== */
+    .notebook {
       position: relative;
       z-index: 1;
       width: 100%;
-      max-width: 580px;
-      background: rgba(255, 255, 255, .92);
-      backdrop-filter: blur(10px);
-      border-radius: 28px;
-      box-shadow: 0 16px 48px rgba(74, 144, 217, .13), 0 2px 12px rgba(0, 0, 0, .06);
-      padding: 40px 32px 32px;
+      max-width: 520px;
+      background: #fff;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      padding: 36px 28px 28px;
+      box-shadow: 4px 4px 0 #e8e4dc, 2px 8px 24px rgba(0, 0, 0, .06);
     }
 
-    /* header */
+    /* 左侧红线（装订线） */
+    .notebook::before {
+      content: '';
+      position: absolute;
+      left: 14px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--redpen);
+      opacity: .25;
+    }
+
+    /* 顶部装订环 */
+    .notebook::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 12px;
+      background: repeating-linear-gradient(90deg,
+          transparent 0, transparent 8px,
+          #bbb 8px, #bbb 10px,
+          transparent 10px, transparent 18px);
+      border-radius: 6px;
+    }
+
+    /* ========================================
+   HEADER
+   ======================================== */
     .header {
       text-align: center;
-      margin-bottom: 24px
+      margin-bottom: 24px;
+      padding-left: 10px
     }
 
-    .header .icon-wrap {
+    .header-icon {
+      font-size: 40px;
       display: inline-block;
-      margin-bottom: 8px
-    }
-
-    .header .icon-wrap i {
-      font-size: 52px;
-      color: #4A90D9;
-      display: inline-block;
-      transition: transform .4s cubic-bezier(.34, 1.56, .64, 1);
-    }
-
-    .header .icon-wrap.spin i {
-      transform: rotate(360deg) scale(1.15)
+      background: linear-gradient(135deg, #2B5EA7, #5B9A4F);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
     }
 
     .header h1 {
-      font-size: 26px;
-      font-weight: 700;
-      color: #333;
-      letter-spacing: .5px
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+      margin-top: 6px;
+      letter-spacing: 1px;
+      text-decoration: underline;
+      text-decoration-style: wavy;
+      text-underline-offset: 6px;
+      text-decoration-color: var(--highlight);
+      text-decoration-thickness: 2px;
     }
 
-    .header h1 span {
-      background: linear-gradient(135deg, #4A90D9, #7EC8A0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    /* control rows */
+    /* ========================================
+   CONTROLS
+   ======================================== */
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      margin-bottom: 24px
+      gap: 14px;
+      margin-bottom: 22px;
+      padding-left: 10px;
     }
 
     .ctrl-row {
       display: flex;
       align-items: center;
-      gap: 12px
+      gap: 10px
     }
 
-    .ctrl-row label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #555;
+    .ctrl-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      min-width: 36px;
       white-space: nowrap;
-      min-width: 42px
+      background-image: linear-gradient(var(--highlight) 40%, transparent 40%);
+      background-repeat: no-repeat;
+      background-size: 100% 60%;
+      background-position: 0 85%;
+      padding: 0 2px;
     }
 
     .ctrl-val {
-      min-width: 52px;
+      min-width: 44px;
       text-align: center;
-      font-size: 18px;
-      font-weight: 700;
-      color: #4A90D9
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
     }
 
+    /* 自定义滑块 */
     input[type=range] {
       -webkit-appearance: none;
       appearance: none;
       flex: 1;
-      min-width: 100px;
-      height: 6px;
-      background: linear-gradient(90deg, #b8d8f8, #7EC8A0);
-      border-radius: 3px;
+      min-width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, #ccc, #aaa);
+      border-radius: 2px;
       outline: none;
       cursor: pointer;
     }
 
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      background: #fff;
-      border: 3px solid #4A90D9;
-      box-shadow: 0 2px 8px rgba(74, 144, 217, .25);
+      background: var(--ink);
+      border: 3px solid #fff;
+      box-shadow: 1px 1px 3px rgba(0, 0, 0, .2);
       cursor: pointer;
+      transition: transform .15s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:active {
+      transform: scale(1.25);
+      background: var(--redpen);
     }
 
     input[type=range]::-moz-range-thumb {
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      background: #fff;
-      border: 3px solid #4A90D9;
-      box-shadow: 0 2px 8px rgba(74, 144, 217, .25);
+      background: var(--ink);
+      border: 3px solid #fff;
+      box-shadow: 1px 1px 3px rgba(0, 0, 0, .2);
       cursor: pointer;
     }
 
-    /* result area */
+    input[type=range]::-moz-range-thumb:active {
+      transform: scale(1.25);
+      background: var(--redpen);
+    }
+
+    input[type=range]::-moz-range-track {
+      height: 4px;
+      background: linear-gradient(90deg, #ccc, #aaa);
+      border-radius: 2px;
+      border: none;
+    }
+
+    /* ========================================
+   RESULT AREA
+   ======================================== */
     .result-area {
-      background: linear-gradient(135deg, #f0f7ff, #f5fffa);
-      border-radius: 20px;
-      padding: 24px 16px;
-      margin-bottom: 24px;
-      border: 2px dashed #d0e5f5;
-      transition: border-color .3s, background .3s;
+      background: var(--paper);
+      border: 2px dashed #ccc;
+      border-radius: 3px;
+      padding: 20px 12px;
+      margin-bottom: 22px;
+      position: relative;
+      background-image: repeating-linear-gradient(transparent 0, transparent 30px,
+          #e8e4dc 30px, #e8e4dc 31px);
+      transition: border-color .3s;
     }
 
     .result-area.active {
-      border-color: #4A90D9;
-      background: linear-gradient(135deg, #e8f4fd, #eafff5)
+      border-color: var(--ink)
     }
 
     .result-label {
       text-align: center;
-      font-size: 12px;
+      font-size: 11px;
       color: #aaa;
-      margin-bottom: 14px;
-      letter-spacing: 1px;
-      font-weight: 500
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+      font-weight: 600;
     }
 
-    /* digits — wrap to 2 rows max, centered */
+    /* ========================================
+   DIGITS — 图纸方格
+   ======================================== */
     .digits {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 5px;
-      padding: 4px 0;
+      gap: 4px
     }
 
     .digit-slot {
-      width: 38px;
-      height: 52px;
-      flex-shrink: 0;
+      width: 36px;
+      height: 48px;
+      background: #fff;
+      border: 1.5px solid #bbb;
+      border-bottom: 2.5px solid #999;
+      border-right: 2.5px solid #999;
+      border-radius: 2px;
       overflow: hidden;
       position: relative;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: inset 0 2px 6px rgba(0, 0, 0, .06), 0 2px 8px rgba(0, 0, 0, .04);
-      border: 1.5px solid #e8eef5;
-      transition: border-color .3s, box-shadow .3s;
+      transition: border-color .25s, transform .15s;
     }
 
     .digit-slot .digit-display {
@@ -196,168 +300,610 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px;
-      font-weight: 700;
-      color: #4A90D9;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--pencil);
       font-variant-numeric: tabular-nums;
       user-select: none;
+      text-shadow: .5px .5px 0 rgba(0, 0, 0, .08);
     }
 
     .digit-slot.rolling {
-      border-color: #FF8A65;
-      box-shadow: 0 0 0 3px rgba(255, 138, 101, .2), inset 0 2px 6px rgba(0, 0, 0, .06);
+      border-color: var(--redpen);
+      animation: slotShake .08s infinite alternate;
+      background: var(--highlight);
+    }
+
+    @keyframes slotShake {
+      0% {
+        transform: translateY(-1px)
+      }
+
+      100% {
+        transform: translateY(1px)
+      }
     }
 
     .digit-slot.done {
-      border-color: #7EC8A0;
-      box-shadow: 0 0 0 3px rgba(126, 200, 160, .2), inset 0 2px 6px rgba(0, 0, 0, .06);
+      border-color: var(--ruler);
+      border-bottom-color: #3d7a35;
+      border-right-color: #3d7a35;
+      background: #f0faf0;
     }
 
     .digit-slot.done .digit-display {
-      color: #333
+      color: #2a6e22
     }
 
-    /* buttons */
+    /* ========================================
+   BUTTONS — 贴纸按钮
+   ======================================== */
     .btn-group {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       justify-content: center;
       flex-wrap: wrap;
-      margin-bottom: 16px
+      margin-bottom: 14px
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 14px 32px;
-      border-radius: 14px;
+      gap: 6px;
+      padding: 12px 28px;
+      border-radius: 3px;
       border: none;
-      font-size: 16px;
-      font-weight: 600;
+      font-size: 15px;
+      font-weight: 700;
       cursor: pointer;
-      transition: all .25s cubic-bezier(.34, 1.56, .64, 1);
       font-family: inherit;
+      transition: transform .15s, box-shadow .15s;
     }
 
     .btn i {
-      font-size: 18px
+      font-size: 17px
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #4A90D9, #5BA3E8);
+      background: var(--ink);
       color: #fff;
-      box-shadow: 0 4px 16px rgba(74, 144, 217, .3);
+      box-shadow: 3px 3px 0 #1a3d6e;
+      transform: rotate(-1deg);
     }
 
     .btn-primary:hover {
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 8px 28px rgba(74, 144, 217, .38)
+      transform: rotate(0deg) translateY(-1px);
+      box-shadow: 4px 4px 0 #1a3d6e
     }
 
     .btn-primary:active {
-      transform: translateY(0) scale(.97)
+      transform: rotate(0deg) translateY(1px);
+      box-shadow: 1px 1px 0 #1a3d6e
     }
 
     .btn-secondary {
-      background: linear-gradient(135deg, #7EC8A0, #5CB88A);
+      background: var(--ruler);
       color: #fff;
-      box-shadow: 0 4px 16px rgba(126, 200, 160, .3);
+      box-shadow: 3px 3px 0 #3d7a35;
+      transform: rotate(1deg);
     }
 
     .btn-secondary:hover {
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 8px 28px rgba(126, 200, 160, .38)
+      transform: rotate(0deg) translateY(-1px);
+      box-shadow: 4px 4px 0 #3d7a35
     }
 
     .btn-secondary:active {
-      transform: translateY(0) scale(.97)
+      transform: rotate(0deg) translateY(1px);
+      box-shadow: 1px 1px 0 #3d7a35
     }
 
-    /* toast */
+    /* ========================================
+   TOAST — 便利贴
+   ======================================== */
     .toast {
       position: fixed;
-      bottom: 40px;
+      bottom: 32px;
       left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: #333;
-      color: #fff;
-      padding: 12px 28px;
-      border-radius: 12px;
+      transform: translateX(-50%) translateY(16px) rotate(-1.5deg);
+      background: var(--highlight);
+      color: var(--pencil);
+      padding: 10px 24px;
+      border: 1.5px solid #e6c84a;
+      border-radius: 2px;
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 700;
       opacity: 0;
-      transition: all .35s cubic-bezier(.34, 1.56, .64, 1);
+      transition: all .3s cubic-bezier(.34, 1.56, .64, 1);
       pointer-events: none;
       z-index: 100;
       white-space: nowrap;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
+      box-shadow: 2px 3px 6px rgba(0, 0, 0, .1);
     }
 
     .toast.show {
       opacity: 1;
-      transform: translateX(-50%) translateY(0)
+      transform: translateX(-50%) translateY(0) rotate(-1.5deg)
     }
 
-    /* footer */
+    /* ========================================
+   FOOTER
+   ======================================== */
     .footer {
       text-align: center;
-      padding-top: 8px
+      padding-top: 4px
     }
 
     .footer p {
-      font-size: 13px;
+      font-size: 12px;
       color: #bbb;
-      line-height: 1.7
+      line-height: 1.6
     }
 
-    .footer .hint {
-      color: #999
+    .copyright {
+      text-align: center;
+      font-size: 11px;
+      color: #ccc;
+      padding: 16px 12px;
+      letter-spacing: .5px;
     }
 
-    /* responsive */
+    /* ========================================
+   DARK MODE TOGGLE — 右上角贴纸按钮
+   ======================================== */
+    .theme-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 200;
+      width: 42px;
+      height: 42px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+      box-shadow: 2px 2px 0 #e8e4dc;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .4s, border-color .4s, box-shadow .4s, transform .15s;
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(-5deg) scale(1.08);
+    }
+
+    .theme-toggle:active {
+      transform: rotate(0deg) scale(.95);
+      box-shadow: 1px 1px 0 #e8e4dc;
+    }
+
+    .theme-toggle img {
+      transition: opacity .3s;
+    }
+
+    /* 亮色模式：显示蓝色太阳，其余隐藏 */
+    .theme-toggle .icon-sunny {
+      display: block;
+    }
+
+    .theme-toggle .icon-sunny-d {
+      display: none;
+    }
+
+    .theme-toggle .icon-night {
+      display: none;
+    }
+
+    .theme-toggle .icon-night-d {
+      display: none;
+    }
+
+    .dark .theme-toggle {
+      background: #2a2e36;
+      border-color: #444;
+      box-shadow: 2px 2px 0 #111;
+    }
+
+    /* 深色模式：显示黄色月亮，其余隐藏 */
+    .dark .theme-toggle .icon-sunny {
+      display: none;
+    }
+
+    .dark .theme-toggle .icon-sunny-d {
+      display: none;
+    }
+
+    .dark .theme-toggle .icon-night {
+      display: none;
+    }
+
+    .dark .theme-toggle .icon-night-d {
+      display: block;
+    }
+
+    /* ========================================
+   DARK MODE — 页面元素覆盖
+   ======================================== */
+    .dark body,
+    .dark {
+      background-color: var(--paper);
+    }
+
+    .dark .notebook {
+      background: #22252d;
+      border-color: #3a3d45;
+      box-shadow: 4px 4px 0 #111, 2px 8px 24px rgba(0, 0, 0, .3);
+    }
+
+    .dark .notebook::after {
+      background: repeating-linear-gradient(90deg,
+          transparent 0, transparent 8px,
+          #555 8px, #555 10px,
+          transparent 10px, transparent 18px);
+    }
+
+    .dark .header h1 {
+      color: var(--ink);
+    }
+
+    .dark .ctrl-label {
+      color: var(--ink);
+    }
+
+    .dark .ctrl-val {
+      color: var(--ink);
+    }
+
+    .dark .result-area {
+      background: #1e2028;
+      border-color: #444;
+    }
+
+    .dark .result-area.active {
+      border-color: var(--ink);
+      background: #1a1d23;
+    }
+
+    .dark .result-label {
+      color: #666;
+    }
+
+    .dark .digit-slot {
+      background: #2a2e36;
+      border-color: #555;
+      border-bottom-color: #666;
+      border-right-color: #666;
+    }
+
+    .dark .digit-slot .digit-display {
+      color: var(--ink);
+      text-shadow: none;
+    }
+
+    .dark .digit-slot.rolling {
+      background: var(--highlight);
+      border-color: var(--redpen);
+    }
+
+    .dark .digit-slot.done {
+      background: #1a2a1a;
+      border-color: var(--ruler);
+      border-bottom-color: #3d7a35;
+      border-right-color: #3d7a35;
+    }
+
+    .dark .digit-slot.done .digit-display {
+      color: #8BC78B;
+    }
+
+    .dark .btn-primary {
+      background: #3a6a9a;
+      box-shadow: 3px 3px 0 #1a3a5a;
+    }
+
+    .dark .btn-secondary {
+      background: #3a6a35;
+      box-shadow: 3px 3px 0 #1a3a1a;
+    }
+
+    .dark .toast {
+      background: #3a3520;
+      color: #ddd;
+      border-color: #665520;
+    }
+
+    .dark .footer p {
+      color: #555;
+    }
+
+    .dark .copyright {
+      color: #444;
+    }
+
+    .dark input[type=range] {
+      background: linear-gradient(90deg, #444, #555);
+    }
+
+    .dark input[type=range]::-webkit-slider-thumb {
+      background: var(--ink);
+      border-color: #222;
+    }
+
+    .dark input[type=range]::-moz-range-thumb {
+      background: var(--ink);
+      border-color: #222;
+    }
+
+    .dark input[type=range]::-moz-range-track {
+      background: linear-gradient(90deg, #444, #555);
+    }
+
+    /* 所有颜色过渡 */
+    .notebook,
+    .result-area,
+    .digit-slot,
+    .btn,
+    .toast,
+    .ctrl-label,
+    .ctrl-val,
+    .footer p,
+    .copyright,
+    input[type=range],
+    .theme-toggle {
+      transition: background .4s, color .4s, border-color .4s, box-shadow .4s;
+    }
+
+    /* ========================================
+   RESPONSIVE
+   ======================================== */
     @media(max-width:500px) {
-      .card {
-        padding: 28px 16px 22px;
-        border-radius: 22px
+      .notebook {
+        padding: 28px 16px 22px
       }
 
       .header h1 {
-        font-size: 22px
+        font-size: 20px
       }
 
-      .header .icon-wrap i {
-        font-size: 42px
+      .header-icon {
+        font-size: 34px
       }
 
       .btn {
-        padding: 12px 22px;
-        font-size: 14px;
-        border-radius: 12px
-      }
-
-      .digits {
-        gap: 4px
-      }
-
-      .digit-slot {
-        width: 30px;
-        height: 44px
-      }
-
-      .digit-slot .digit-display {
-        font-size: 22px
-      }
-
-      .ctrl-row label {
-        min-width: 36px;
+        padding: 10px 20px;
         font-size: 13px
       }
 
-      .ctrl-val {
-        font-size: 16px;
-        min-width: 44px
+      .digit-slot {
+        width: 28px;
+        height: 40px
       }
+
+      .digit-slot .digit-display {
+        font-size: 20px
+      }
+
+      .digits {
+        gap: 3px
+      }
+
+      .ctrl-label {
+        min-width: 32px;
+        font-size: 12px
+      }
+
+      .ctrl-val {
+        font-size: 15px;
+        min-width: 38px
+      }
+    }
+
+    @media(max-width:360px) {
+      .digit-slot {
+        width: 24px;
+        height: 36px
+      }
+
+      .digit-slot .digit-display {
+        font-size: 17px
+      }
+
+      .digits {
+        gap: 2px
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      .digit-slot.rolling {
+        animation: none
+      }
+
+      .toast {
+        transition: none
+      }
+
+      .sticky-note {
+        animation: none !important
+      }
+    }
+
+    /* ========================================
+   STICKY NOTE — 今日祝福便利贴
+   ======================================== */
+    .sticky-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, .25);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+
+    .sticky-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sticky-note {
+      position: relative;
+      width: 300px;
+      min-height: 180px;
+      background: #FFF9C4;
+      padding: 36px 24px 24px;
+      border-radius: 2px;
+      box-shadow: 3px 4px 12px rgba(0, 0, 0, .15);
+      transform: rotate(-2deg) scale(.85) translateY(-30px);
+      transition: transform .4s cubic-bezier(.34, 1.56, .64, 1), opacity .3s;
+      opacity: 0;
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+
+    .sticky-overlay.show .sticky-note {
+      transform: rotate(-2deg) scale(1) translateY(0);
+      opacity: 1;
+    }
+
+    /* 顶部胶带装饰 */
+    .sticky-note::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%) rotate(1deg);
+      width: 70px;
+      height: 22px;
+      background: rgba(180, 210, 240, .55);
+      border: 1px solid rgba(140, 180, 220, .3);
+      border-radius: 2px;
+    }
+
+    /* 底部撕边效果 */
+    .sticky-note::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(135deg, #FFF9C4 33.33%, transparent 33.33%) 0 0 / 10px 8px,
+        linear-gradient(225deg, #FFF9C4 33.33%, transparent 33.33%) 0 0 / 10px 8px;
+      background-position: bottom;
+    }
+
+    .sticky-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 26px;
+      height: 26px;
+      border: 2px solid var(--redpen);
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, transform .15s;
+      padding: 0;
+    }
+
+    .sticky-close:hover {
+      background: var(--redpen);
+    }
+
+    .sticky-close:hover svg {
+      stroke: #fff;
+    }
+
+    .sticky-close:active {
+      transform: scale(.9);
+    }
+
+    .sticky-close svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--redpen);
+      stroke-width: 2.5;
+      fill: none;
+      transition: stroke .2s;
+    }
+
+    .sticky-label {
+      font-size: 11px;
+      color: #c8a040;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .sticky-text {
+      font-size: 17px;
+      font-weight: 600;
+      color: #5a4a20;
+      line-height: 1.7;
+      word-break: break-word;
+    }
+
+    .sticky-footer {
+      margin-top: 14px;
+      font-size: 11px;
+      color: #c8a040;
+      text-align: right;
+    }
+
+    /* 深色模式便利贴 */
+    .dark .sticky-overlay {
+      background: rgba(0, 0, 0, .5);
+    }
+
+    .dark .sticky-note {
+      background: #3a3520;
+      box-shadow: 3px 4px 16px rgba(0, 0, 0, .4);
+    }
+
+    .dark .sticky-note::before {
+      background: rgba(80, 100, 60, .5);
+      border-color: rgba(100, 120, 80, .3);
+    }
+
+    .dark .sticky-note::after {
+      background: linear-gradient(135deg, #3a3520 33.33%, transparent 33.33%) 0 0 / 10px 8px,
+        linear-gradient(225deg, #3a3520 33.33%, transparent 33.33%) 0 0 / 10px 8px;
+      background-position: bottom;
+    }
+
+    .dark .sticky-label {
+      color: #b8a060;
+    }
+
+    .dark .sticky-text {
+      color: #e0d8c0;
+    }
+
+    .dark .sticky-footer {
+      color: #b8a060;
+    }
+
+    .dark .sticky-close {
+      border-color: #cc6666;
+    }
+
+    .dark .sticky-close:hover {
+      background: #cc6666;
+    }
+
+    .dark .sticky-close svg {
+      stroke: #cc6666;
+    }
+
+    .dark .sticky-close:hover svg {
+      stroke: #fff;
     }
   </style>
 </head>
@@ -366,249 +912,74 @@
 
   <canvas id="bgCanvas"></canvas>
 
-  <div class="card">
-    <div class="header">
-      <div class="icon-wrap" id="headerIcon">
-        <i class="mdi mdi-dice-multiple"></i>
+  <!-- 主题切换按钮：图标来自 icons/ 文件夹 -->
+  <button class="theme-toggle" id="themeToggle" aria-label="切换深色模式">
+    <img class="icon-sunny" src="icons/sunny.svg" alt="" width="22" height="22">
+    <img class="icon-sunny-d" src="icons/sunny-dark.svg" alt="" width="22" height="22">
+    <img class="icon-night" src="icons/night.svg" alt="" width="22" height="22">
+    <img class="icon-night-d" src="icons/night-dark.svg" alt="" width="22" height="22">
+  </button>
+
+  <div class="page-wrap">
+    <div class="notebook">
+      <div class="header">
+        <i class="mdi mdi-dice-multiple header-icon" id="headerIcon"></i>
+        <h1>随机数生成器</h1>
       </div>
-      <h1><span>随机数生成器</span></h1>
-    </div>
 
-    <div class="controls">
-      <div class="ctrl-row">
-        <label for="digitCount">位数</label>
-        <input type="range" id="digitCount" min="1" max="20" value="10">
-        <span class="ctrl-val" id="digitVal">10</span>
+      <div class="controls">
+        <div class="ctrl-row">
+          <span class="ctrl-label">位数</span>
+          <input type="range" id="digitCount" min="1" max="20" value="10">
+          <span class="ctrl-val" id="digitVal">10</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">范围</span>
+          <input type="range" id="maxRange" min="1" max="9" value="9">
+          <span class="ctrl-val" id="maxVal">0-9</span>
+        </div>
       </div>
-      <div class="ctrl-row">
-        <label for="maxRange">范围</label>
-        <input type="range" id="maxRange" min="1" max="9" value="9">
-        <span class="ctrl-val" id="maxVal">0-9</span>
+
+      <div class="result-area" id="resultArea">
+        <div class="result-label">点 击 生 成</div>
+        <div class="digits" id="digits"></div>
       </div>
-    </div>
 
-    <div class="result-area" id="resultArea">
-      <div class="result-label">点 击 生 成 获 取 随 机 数</div>
-      <div class="digits" id="digits"></div>
-    </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="generateBtn">
+          <i class="mdi mdi-dice-multiple"></i>生成
+        </button>
+        <button class="btn btn-secondary" id="copyBtn">
+          <i class="mdi mdi-content-copy"></i>复制
+        </button>
+      </div>
 
-    <div class="btn-group">
-      <button class="btn btn-primary" id="generateBtn">
-        <i class="mdi mdi-dice-multiple"></i>生成
-      </button>
-      <button class="btn btn-secondary" id="copyBtn">
-        <i class="mdi mdi-content-copy"></i>复制
-      </button>
-    </div>
-
-    <div class="footer">
-      <p class="hint">每个数字都有在随机哦~ (^_^)</p>
+      <div class="footer">
+        <p>每个数字都有在随机跳动哦~</p>
+      </div>
     </div>
   </div>
 
-  <div class="toast" id="toast">复制成功!</div>
+  <p class="copyright">Copyright&copy;2026 GrittyWang. All Rights Reserved</p>
 
-  <script>
-    /* ============ Config ============ */
-    const ROLL_STEPS = 55;
-    const BASE_MS = 30;
-    const POWER = 2.2;
+  <div class="toast" id="toast"></div>
 
-    /* ============ State ============ */
-    let digitCount = 10;
-    let maxDigit = 9;        // range slider: max digit value per position (0-9)
-    let isAnimating = false;
-    let currentResult = '';
+  <!-- 今日祝福便利贴 -->
+  <div class="sticky-overlay" id="stickyOverlay">
+    <div class="sticky-note">
+      <button class="sticky-close" id="stickyClose" aria-label="关闭">
+        <svg viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <div class="sticky-label">今日祝福语</div>
+      <div class="sticky-text" id="stickyText"></div>
+      <div class="sticky-footer">—— 来自GrittyWang的祝福 (^_^) </div>
+    </div>
+  </div>
 
-    /* ============ DOM ============ */
-    const $digits = document.getElementById('digits');
-    const $range = document.getElementById('digitCount');
-    const $val = document.getElementById('digitVal');
-    const $maxRange = document.getElementById('maxRange');
-    const $maxValEl = document.getElementById('maxVal');
-    const $generate = document.getElementById('generateBtn');
-    const $copy = document.getElementById('copyBtn');
-    const $toast = document.getElementById('toast');
-    const $resultArea = document.getElementById('resultArea');
-    const $headerIcon = document.getElementById('headerIcon');
-
-    /* ============ Helpers ============ */
-    /* Random digit within [0, maxDigit] */
-    function randDigit() { return Math.floor(Math.random() * (maxDigit + 1)); }
-
-    /* Create a digit slot with initial display "0" */
-    function createSlot() {
-      const slot = document.createElement('div');
-      slot.className = 'digit-slot';
-      slot.innerHTML = '<div class="digit-display">0</div>';
-      return slot;
-    }
-
-    /* Build all slots, show "0" in each */
-    function buildSlots() {
-      $digits.innerHTML = '';
-      for (let i = 0; i < digitCount; i++) {
-        $digits.appendChild(createSlot());
-      }
-    }
-
-    /* ============ Sequential Slot-Machine Animation ============ */
-    function animateSlot(slot, target) {
-      return new Promise(resolve => {
-        const display = slot.querySelector('.digit-display');
-        let step = 0;
-        slot.classList.add('rolling');
-
-        function tick() {
-          if (step >= ROLL_STEPS) {
-            display.textContent = target;
-            slot.classList.remove('rolling');
-            slot.classList.add('done');
-            resolve();
-            return;
-          }
-          display.textContent = randDigit();
-          step++;
-          const delay = BASE_MS * Math.pow(step / ROLL_STEPS, POWER);
-          setTimeout(tick, delay);
-        }
-        tick();
-      });
-    }
-
-    /* ============ Generate ============ */
-    async function generate() {
-      if (isAnimating) return;
-      isAnimating = true;
-      $generate.style.opacity = '.55';
-      $generate.style.pointerEvents = 'none';
-
-      $headerIcon.classList.remove('spin');
-      void $headerIcon.offsetWidth;
-      $headerIcon.classList.add('spin');
-
-      $resultArea.classList.add('active');
-
-      /* generate each digit independently within [0, maxDigit] */
-      const res = Array.from({ length: digitCount }, randDigit);
-      currentResult = res.join('');
-
-      /* build fresh slots showing "0" */
-      buildSlots();
-
-      /* animate each digit sequentially */
-      const slots = $digits.querySelectorAll('.digit-slot');
-      for (let i = 0; i < slots.length; i++) {
-        await animateSlot(slots[i], res[i]);
-      }
-
-      isAnimating = false;
-      $generate.style.opacity = '1';
-      $generate.style.pointerEvents = 'auto';
-    }
-
-    /* ============ Copy ============ */
-    function copyResult() {
-      if (!currentResult) { showToast('请先生成随机数~'); return; }
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(currentResult).then(() => showToast('复制成功! (^_^)'));
-      } else {
-        const t = document.createElement('textarea');
-        t.value = currentResult; t.style.cssText = 'position:fixed;left:-9999px';
-        document.body.appendChild(t); t.select();
-        document.execCommand('copy'); t.remove();
-        showToast('复制成功! (^_^)');
-      }
-    }
-
-    let toastTimer;
-    function showToast(msg) {
-      clearTimeout(toastTimer);
-      $toast.textContent = msg;
-      $toast.classList.add('show');
-      toastTimer = setTimeout(() => $toast.classList.remove('show'), 2200);
-    }
-
-    /* ============ Sliders ============ */
-
-    /* Digit count slider — manual override */
-    $range.addEventListener('input', () => {
-      digitCount = +$range.value;
-      $val.textContent = digitCount;
-      currentResult = '';
-      $resultArea.classList.remove('active');
-      buildSlots();
-    });
-
-    /* Range slider — controls per-digit max value (0-N) */
-    $maxRange.addEventListener('input', () => {
-      maxDigit = +$maxRange.value;
-      $maxValEl.textContent = '0-' + maxDigit;
-      currentResult = '';
-      $resultArea.classList.remove('active');
-      buildSlots();
-    });
-
-    /* ============ Canvas Background ============ */
-    (function initBg() {
-      const c = document.getElementById('bgCanvas');
-      const ctx = c.getContext('2d');
-      let W, H;
-      function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
-      resize(); addEventListener('resize', resize);
-
-      const TYPES = ['circle', 'star', 'plane', 'book', 'dot'];
-      const COLORS = ['#4A90D9', '#7EC8A0', '#FF8A65', '#B8A9E8', '#FFD54F'];
-      const shapes = [];
-      for (let i = 0; i < 18; i++) {
-        shapes.push({
-          x: Math.random() * 2000, y: Math.random() * 2000,
-          r: 4 + Math.random() * 18, type: TYPES[i % TYPES.length],
-          color: COLORS[i % COLORS.length], opacity: .12 + Math.random() * .18,
-          vx: (Math.random() - .5) * .25, vy: -.12 - Math.random() * .35,
-          phase: Math.random() * Math.PI * 2
-        });
-      }
-      function drawCircle(s) { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fillStyle = s.color; ctx.globalAlpha = s.opacity; ctx.fill(); }
-      function drawStar(s) {
-        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(s.phase + performance.now() * .0003);
-        const r = s.r, ri = r * .45, pts = 5; ctx.beginPath();
-        for (let i = 0; i < pts * 2; i++) { const rad = i % 2 === 0 ? r : ri; const a = (i * Math.PI / pts) - Math.PI / 2; i === 0 ? ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad) : ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad); }
-        ctx.closePath(); ctx.fillStyle = s.color; ctx.globalAlpha = s.opacity; ctx.fill(); ctx.restore();
-      }
-      function drawPlane(s) {
-        ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(-.3 + Math.sin(s.phase + performance.now() * .001) * .15);
-        const r = s.r * .8; ctx.beginPath(); ctx.moveTo(-r, r * .3); ctx.lineTo(r, 0); ctx.lineTo(-r, -r * .3); ctx.closePath();
-        ctx.fillStyle = s.color; ctx.globalAlpha = s.opacity; ctx.fill();
-        ctx.beginPath(); ctx.moveTo(-r, r * .3); ctx.lineTo(-r * 1.6, r * .7); ctx.moveTo(-r, -r * .3); ctx.lineTo(-r * 1.6, -r * .7);
-        ctx.strokeStyle = s.color; ctx.lineWidth = 1.5; ctx.globalAlpha = s.opacity * .5; ctx.stroke(); ctx.restore();
-      }
-      function drawBook(s) {
-        ctx.save(); ctx.translate(s.x, s.y); const w = s.r * 1.4, h = s.r * 1.1;
-        ctx.fillStyle = s.color; ctx.globalAlpha = s.opacity; ctx.fillRect(-w / 2, -h / 2, w, h);
-        ctx.fillStyle = '#fff'; ctx.globalAlpha = s.opacity * .6;
-        ctx.fillRect(-w / 2 + 2, -h / 2 + 2, w - 4, 2); ctx.fillRect(-w / 2 + 2, -h / 2 + h * .35, w - 4, 1.5); ctx.fillRect(-w / 2 + 2, -h / 2 + h * .55, w * .5, 1.5);
-        ctx.restore();
-      }
-      const drawFns = { circle: drawCircle, star: drawStar, plane: drawPlane, book: drawBook, dot: drawCircle };
-      function loop() {
-        ctx.clearRect(0, 0, W, H); const t = performance.now() * .001;
-        shapes.forEach(s => {
-          s.x += s.vx + Math.sin(t + s.phase) * .18; s.y += s.vy;
-          if (s.y < -40) { s.y = H + 40; s.x = Math.random() * W; }
-          if (s.x < -40) s.x = W + 40; if (s.x > W + 40) s.x = -40;
-          (drawFns[s.type] || drawCircle)(s);
-        });
-        ctx.globalAlpha = 1; requestAnimationFrame(loop);
-      }
-      loop();
-    })();
-
-    /* ============ Init ============ */
-    $generate.addEventListener('click', generate);
-    $copy.addEventListener('click', copyResult);
-    buildSlots();
-  </script>
+  <script src="script.js"></script>
 </body>
 
 </html>
