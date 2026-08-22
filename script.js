@@ -32,7 +32,7 @@ function loadResult() {
   try { return localStorage.getItem(STORAGE_KEY); } catch (e) { return null; }
 }
 
-/* 将已有结果直接显示到格子里（无动画） */
+/* 将已有结果直接显示到格子里 */
 function displayResult(str) {
   currentResult = str;
   digitCount = str.length;
@@ -346,7 +346,10 @@ function showSticky() {
 
 function hideSticky() {
   $stickyOverlay.classList.remove('show');
-  sessionStorage.setItem(STICKY_KEY, '1');
+  // 关闭祝福3秒后弹出广告
+  setTimeout(() => {
+    $adBanner.classList.add('show');
+  }, 3000);
 }
 
 $stickyClose.addEventListener('click', hideSticky);
@@ -361,6 +364,14 @@ $stickyOverlay.addEventListener('click', (e) => {
 
 // 每次刷新均会显示祝福语
 showSticky();
+
+/* ============ 底部广告栏 ============ */
+const $adBanner = document.getElementById('adBanner');
+const $adClose = document.getElementById('adClose');
+
+$adClose.addEventListener('click', () => {
+  $adBanner.classList.remove('show');
+});
 
 /* ================================================
    浮动文具背景 — Canvas 绘制
@@ -489,26 +500,45 @@ showSticky();
     ctx.save();
     ctx.translate(x, y); ctx.rotate(rot);
     ctx.globalAlpha = alpha;
-    const r = s * .7;
+
+    const noseX = s * .6,   noseY = -s * .35;   // 机头（右上）
+    const topX  = -s * .55, topY  = -s * .35;   // 左上翼尖
+    const midX  = -s * .42, midY  = s * .05;    // 左下翼边
+    const btmX  = -s * .12, btmY  = s * .45;    // 底部左尖
+    const foldX = s * .02,  foldY = s * .2;     // 折叠角（V缺口内）
+
     ctx.beginPath();
-    ctx.moveTo(-r, r * .3);
-    ctx.lineTo(r, 0);
-    ctx.lineTo(-r, -r * .3);
+    ctx.moveTo(noseX, noseY);
+    ctx.lineTo(topX, topY);
+    ctx.lineTo(midX, midY);
     ctx.closePath();
-    ctx.fillStyle = '#E3F2FD';
+    ctx.fillStyle = '#A1D4EE';
     ctx.fill();
-    ctx.strokeStyle = '#90CAF9';
-    ctx.lineWidth = s * .04;
-    ctx.stroke();
-    // 尾迹
+
     ctx.beginPath();
-    ctx.moveTo(-r, r * .3);
-    ctx.lineTo(-r * 1.5, r * .6);
-    ctx.moveTo(-r, -r * .3);
-    ctx.lineTo(-r * 1.5, -r * .6);
-    ctx.strokeStyle = '#BBDEFB';
-    ctx.lineWidth = s * .03;
-    ctx.stroke();
+    ctx.moveTo(noseX, noseY);
+    ctx.lineTo(midX, midY);
+    ctx.lineTo(btmX, btmY);
+    ctx.closePath();
+    ctx.fillStyle = '#6AB4D8';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(midX, midY);
+    ctx.lineTo(btmX, btmY);
+    ctx.lineTo(foldX, foldY);
+    ctx.closePath();
+    ctx.fillStyle = '#2E7090';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(noseX, noseY);
+    ctx.lineTo(btmX, btmY);
+    ctx.lineTo(foldX, foldY);
+    ctx.closePath();
+    ctx.fillStyle = '#5AA8CC';
+    ctx.fill();
+
     ctx.restore();
   }
 
@@ -607,7 +637,7 @@ showSticky();
   function loop() {
     ctx.clearRect(0, 0, W, H);
 
-    // 画网格线（和 body 背景同一层，消除闪烁）
+    // 画网格线
     const isDark = document.body.classList.contains('dark');
     ctx.strokeStyle = isDark ? 'rgba(60,66,80,.4)' : 'rgba(200,224,244,.35)';
     ctx.lineWidth = 1;
