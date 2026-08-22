@@ -10,7 +10,7 @@
 - **调节位数** — 拖动滑块实时调整位数（1-20位），默认10位
 - **调节范围** — 拖动"范围"滑块控制每位数字的可选范围（如0-6）
 - **深色模式** — 右上角一键切换，护眼深蓝灰配色，偏好保存至 localStorage
-- **今日祝福** — 页面加载时弹出便利贴弹窗，随机显示100句校园风祝福语
+- **今日祝福** — 每次加载页面弹出便利贴弹窗，随机显示100句校园风祝福语
 - **数据持久化** — 生成结果自动保存至 localStorage，刷新页面不丢失
 - **浮动文具背景** — Canvas 绘制铅笔、橡皮、尺子、星星、纸飞机等校园元素
 - **自适应布局** — 数字自动换行，PC 和手机均可良好显示
@@ -21,7 +21,8 @@
 
 ```
 260816/
-├── index.html                      # 主页面（包含全部 CSS 和 JavaScript）
+├── index.html                      # 主页面（HTML 结构 + CSS 样式）
+├── script.js                       # JavaScript 逻辑（动画、交互、深色模式等）
 ├── README.md                       # 本文件
 └── icons/                          # 本地图标资源
     ├── materialdesignicons.min.css # MDI 字体 CSS
@@ -86,10 +87,10 @@ $headerIcon.animate([
 ### 今日祝福便利贴
 
 - 100 句校园风祝福语，涵盖学习、考试、青春、生活、励志、幽默
-- 页面加载延迟 400ms 弹出，便利贴风格：暖黄纸张 + 顶部胶带 + 底部撕边
+- 每次加载页面延迟 400ms 弹出，便利贴风格：暖黄纸张 + 顶部胶带 + 底部撕边
 - 红色边框关闭按钮（SVG 叉号），点击遮罩也可关闭
-- 使用 `sessionStorage` 记录关闭状态，本次会话内不再重复显示
 - 深色模式自动适配深色纸张
+- 如需关闭后不再弹出，取消 `script.js` 中 `sessionStorage` 相关注释即可
 
 ### 移动端滑块修复
 
@@ -106,7 +107,7 @@ $headerIcon.animate([
 |------|--------|----------|------|
 | 生成结果 | `rng_last_result` | localStorage | 刷新页面仍显示上次结果 |
 | 主题偏好 | `rng_theme` | localStorage | 亮色/深色模式选择 |
-| 祝福弹窗 | `rng_sticky_closed` | sessionStorage | 本次会话关闭后不再弹出 |
+| 祝福弹窗 | `rng_sticky_closed` | sessionStorage | 可选：取消注释后本次会话关闭不再弹出 |
 
 ### 控制项
 
@@ -144,3 +145,11 @@ $headerIcon.animate([
 - Edge 80+
 
 依赖特性：`async/await`、`CSS Custom Properties`、`Web Animations API`、`Canvas 2D`、`Clipboard API`（降级至 `execCommand`）、`sessionStorage`、`localStorage`
+
+## 项目结构说明
+
+- **`index.html`** — 纯 HTML 结构 + CSS 样式（内嵌 `<style>`），约 980 行
+- **`script.js`** — 纯 JavaScript 逻辑，约 640 行，通过 `<script src="script.js">` 引用
+- **`icons/`** — 所有图标资源（MDI 字体 + SVG 矢量图标），完全离线可用
+
+HTML 和 JS 分离后，修改样式只需编辑 `index.html`，修改交互逻辑只需编辑 `script.js`，互不干扰。
