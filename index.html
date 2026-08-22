@@ -92,7 +92,7 @@
       box-shadow: 4px 4px 0 #e8e4dc, 2px 8px 24px rgba(0, 0, 0, .06);
     }
 
-    /* 左侧红线（装订线） */
+    /* 左侧红线 */
     .notebook::before {
       content: '';
       position: absolute;
@@ -446,6 +446,116 @@
       color: #ccc;
       padding: 16px 12px;
       letter-spacing: .5px;
+    }
+
+    /* ========================================
+   AD BANNER — 底部弹出广告
+   ======================================== */
+    .ad-banner {
+      position: fixed;
+      bottom: 44px;
+      left: 50%;
+      transform: translateX(-50%) translateY(110%);
+      z-index: 150;
+      width: 66vw;
+      max-width: 480px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 -2px 20px rgba(0, 0, 0, .15);
+      border: 2px solid #ddd;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .45s cubic-bezier(.34, 1.56, .64, 1), opacity .35s;
+    }
+
+    .ad-banner.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .ad-banner a {
+      display: block;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .ad-banner img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .ad-text-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 14px 12px;
+      background: linear-gradient(transparent, rgba(0, 0, 0, .6));
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ad-text-overlay span {
+      font-size: 16px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow:
+        1px 1px 0 #000,
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        0 2px 6px rgba(0, 0, 0, .6);
+      letter-spacing: 2px;
+    }
+
+    .ad-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 22px;
+      height: 22px;
+      border: none;
+      border-radius: 3px;
+      background: rgba(120, 120, 120, .7);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: background .2s;
+      z-index: 2;
+    }
+
+    .ad-close:hover {
+      background: rgba(80, 80, 80, .9);
+    }
+
+    .ad-close svg {
+      width: 12px;
+      height: 12px;
+      stroke: #fff;
+      stroke-width: 2.5;
+      fill: none;
+    }
+
+    /* 深色模式 */
+    .dark .ad-banner {
+      border-color: #444;
+    }
+
+    @media(max-width:500px) {
+      .ad-banner {
+        width: 85vw;
+      }
+
+      .ad-text-overlay span {
+        font-size: 14px;
+      }
     }
 
     /* ========================================
@@ -961,6 +1071,22 @@
   </div>
 
   <p class="copyright">Copyright&copy;2026 GrittyWang. All Rights Reserved</p>
+
+  <!-- 底部弹出广告 -->
+  <div class="ad-banner" id="adBanner">
+    <a href="https://ys.mihoyo.com/main/" target="_blank" rel="noopener">
+      <img src="ad_pic.png" alt="广告">
+      <div class="ad-text-overlay">
+        <span>点击获取更多福利</span>
+      </div>
+    </a>
+    <button class="ad-close" id="adClose" aria-label="关闭广告">
+      <svg viewBox="0 0 24 24">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  </div>
 
   <div class="toast" id="toast"></div>
 
